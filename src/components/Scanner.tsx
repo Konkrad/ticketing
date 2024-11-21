@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Html5QrcodeScanner } from 'html5-qrcode';
+import { Html5QrcodeScanType, Html5QrcodeScanner, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 import { Camera, CameraOff } from 'lucide-react';
 import { ScanResult } from '../types';
 
@@ -17,9 +17,11 @@ export const Scanner: React.FC<ScannerProps> = ({ onScan }) => {
       scannerRef.current = new Html5QrcodeScanner(
         'qr-reader',
         {
-          fps: 10,
+          fps: 3,
           qrbox: { width: 250, height: 250 },
           aspectRatio: 1,
+          supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
+          formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE]
         },
         true
       );
@@ -32,17 +34,17 @@ export const Scanner: React.FC<ScannerProps> = ({ onScan }) => {
           navigator.vibrate(400);
         }
         
-        // setTimeout(() => setLastResult(null), 2000);
+        setTimeout(() => setLastResult(null), 2000);
       }, (error) => {
         console.warn(error);
       });
     }
 
     return () => {
-      if (scannerRef.current) {
-        scannerRef.current.clear().catch(console.error);
-        scannerRef.current = null;
-      }
+      // if (scannerRef.current) {
+      //   scannerRef.current.clear().catch(console.error);
+      //   scannerRef.current = null;
+      // }
     };
   }, [isScanning, onScan]);
 

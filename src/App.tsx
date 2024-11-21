@@ -4,15 +4,16 @@ import { PassList } from './components/PassList';
 import { SearchValidator } from './components/SearchValidator';
 import { EventPass, ScanResult } from './types';
 import { initialEventPasses } from './data/qrCodes';
-import { QrCode } from 'lucide-react';
 
 function App() {
   const [eventPasses, setEventPasses] = useState<EventPass[]>(initialEventPasses);
 
-  const handleValidation = (scannedData: string, isQRScan: boolean = false): ScanResult => {
+  function handleValidation(scannedData: string, isQRScan: boolean = false): ScanResult {
     const eventPass = isQRScan
       ? eventPasses.find(pass => pass.validQRCodes.includes(scannedData))
       : eventPasses.find(pass => pass.id === scannedData);
+
+    console.log(eventPass, isQRScan)
     
     if (!eventPass) {
       return {
@@ -36,20 +37,26 @@ function App() {
       };
     }
 
-    // Update counter and mark QR code as used if it's a QR scan
-    setEventPasses(prevPasses =>
-      prevPasses.map(pass =>
-        pass.id === eventPass.id
-          ? {
-              ...pass,
-              counter: pass.counter - 1,
-              usedQRCodes: isQRScan 
-                ? [...pass.usedQRCodes, scannedData]
-                : pass.usedQRCodes
-            }
-          : pass
-      )
-    );
+    
+    // Update counter and mark QR code as used if it's a QR scan   
+    const x = eventPasses.map((pass) => {
+      if (pass.id === eventPass.id) {
+        console.log([...pass.usedQRCodes, scannedData])
+        const b = {
+          ...pass,
+          counter: pass.counter - 1,
+          usedQRCodes: isQRScan 
+            ? [...pass.usedQRCodes, scannedData]
+            : pass.usedQRCodes
+        }
+
+        console.log(b)
+        return b
+      }
+      return pass
+    })
+
+    setEventPasses(x);
 
     return {
       success: true,
@@ -68,14 +75,6 @@ function App() {
   return (
     <div className="min-h-screen bg-gray-50 pb-8">
       <div className="max-w-md mx-auto p-4">
-        <div className="text-center mb-6">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
-            <QrCode size={32} className="text-blue-600" />
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900">Pass Validator</h1>
-          <p className="text-gray-600">Scan QR code or search to verify access</p>
-        </div>
-
         <Scanner onScan={handleQRScan} />
         <SearchValidator passes={eventPasses} onValidate={handleManualValidation} />
         <PassList passes={eventPasses} />
