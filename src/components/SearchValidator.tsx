@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { Search } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Search, Check } from 'lucide-react';
+import Fuse from 'fuse.js';
 import { EventPass, ScanResult } from '../types';
 
 interface SearchValidatorProps {
@@ -10,17 +11,31 @@ interface SearchValidatorProps {
 export const SearchValidator: React.FC<SearchValidatorProps> = ({ passes, onValidate }) => {
   const [search, setSearch] = useState('');
   const [result, setResult] = useState<ScanResult | null>(null);
+  const [validatedId, setValidatedId] = useState<string | null>(null);
 
-  const filteredPasses = passes.filter(pass => 
-    pass.id.toLowerCase().includes(search.toLowerCase()) ||
-    pass.name.toLowerCase().includes(search.toLowerCase())
-  );
+  // Initialize Fuse instance with custom options
+  const fuse = useMemo(() => new Fuse(passes, {
+    keys: ['id', 'name', 'email'],
+    threshold: 0.4, // Lower threshold means more strict matching
+    distance: 100, // How far to extend the fuzzy match
+    ignoreLocation: true, // Ignore where in the string the pattern appears
+    useExtendedSearch: true, // Enable extended search features
+  }), [passes]);
+
+  // Get filtered passes using fuzzy search
+  const filteredPasses = useMemo(() => {
+    if (!search) return passes;
+    return fuse.search(search).map(result => result.item);
+  }, [search, fuse, passes]);
 
   const handleValidate = (id: string) => {
     const result = onValidate(id);
     setResult(result);
     
-    if (!result.success && navigator.vibrate) {
+    if (result.success) {
+      setValidatedId(id);
+      setTimeout(() => setValidatedId(null), 2000);
+    } else if (navigator.vibrate) {
       navigator.vibrate(400);
     }
 
@@ -38,7 +53,7 @@ export const SearchValidator: React.FC<SearchValidatorProps> = ({ passes, onVali
         <input
           type="text"
           className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          placeholder="Search by ID or name..."
+          placeholder="Search by ID, name, or email..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
@@ -56,16 +71,26 @@ export const SearchValidator: React.FC<SearchValidatorProps> = ({ passes, onVali
             <div>
               <h3 className="font-medium text-gray-800">{pass.name}</h3>
               <p className="text-sm text-gray-500">ID: {pass.id}</p>
+              <p className="text-sm text-gray-400">{pass.email}</p>
             </div>
             <button
               onClick={() => handleValidate(pass.id)}
-              className={`px-4 py-2 rounded-lg transition-colors
-                ${pass.counter > 0 
-                  ? 'bg-blue-600 text-white hover:bg-blue-700' 
-                  : 'bg-gray-200 text-gray-500 cursor-not-allowed'}`}
+              className={`px-4 py-2 rounded-lg transition-all duration-200 flex items-center gap-2
+                ${validatedId === pass.id 
+                  ? 'bg-green-500 text-white' 
+                  : pass.counter > 0 
+                    ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                    : 'bg-gray-200 text-gray-500 cursor-not-allowed'}`}
               disabled={pass.counter <= 0}
             >
-              Validate
+              {validatedId === pass.id ? (
+                <>
+                  <Check className="w-4 h-4" />
+                  <span>Validated</span>
+                </>
+              ) : (
+                'Validate'
+              )}
             </button>
           </div>
         ))}
