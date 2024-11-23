@@ -2,10 +2,11 @@ import React from 'react';
 import { Scanner } from './components/Scanner';
 import { PassList } from './components/PassList';
 import { SearchValidator } from './components/SearchValidator';
+import { FileUpload } from './components/FileUpload';
 import { usePassStore } from './stores/passStore';
 
 function App() {
-  const { passes, validatePass } = usePassStore();
+  const { passes, isLoaded, loadPasses, validatePass } = usePassStore();
 
   const handleQRScan = (scannedData: string) => {
     return validatePass(scannedData, true);
@@ -14,6 +15,10 @@ function App() {
   const handleManualValidation = (passId: string) => {
     return validatePass(passId, false);
   };
+
+  if (!isLoaded) {
+    return <FileUpload onFileLoad={loadPasses} />;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 pb-8">

@@ -1,10 +1,11 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { EventPass, ScanResult } from '../types';
-import { initialEventPasses } from '../data/qrCodes';
 
 interface PassStore {
   passes: EventPass[];
+  isLoaded: boolean;
+  loadPasses: (passes: EventPass[]) => void;
   validatePass: (scannedData: string, isQRScan: boolean) => ScanResult;
   resetPasses: () => void;
 }
@@ -12,7 +13,12 @@ interface PassStore {
 export const usePassStore = create<PassStore>()(
   persist(
     (set, get) => ({
-      passes: initialEventPasses,
+      passes: [],
+      isLoaded: false,
+      
+      loadPasses: (passes: EventPass[]) => {
+        set({ passes, isLoaded: true });
+      },
       
       validatePass: (scannedData: string, isQRScan: boolean) => {
         const { passes } = get();
@@ -61,11 +67,11 @@ export const usePassStore = create<PassStore>()(
         };
       },
 
-      resetPasses: () => set({ passes: initialEventPasses })
+      resetPasses: () => set({ passes: [], isLoaded: false })
     }),
     {
       name: 'event-passes',
       storage: createJSONStorage(() => localStorage)
     }
   )
-); 
+);

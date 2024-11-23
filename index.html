@@ -5,8 +5,25 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Vite + React + TS</title>
+    <style>
+      #success {
+        display: none;
+        width: 100vw;
+        height: 100vh;
+        background-color: #18ff03;
+      }
+
+      #success button {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 5rem;
+      }
+    </style>
   </head>
   <body>
+    <div id="success"><button>Success</button></div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

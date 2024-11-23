@@ -27,11 +27,33 @@ export const Scanner: React.FC<ScannerProps> = ({ onScan }) => {
       );
 
       scannerRef.current.render((decodedText) => {
+        console.log("rendered")
+        scannerRef.current?.pause(true);
         const result = onScan(decodedText);
         setLastResult(result);
+
+        if ('vibrate' in navigator) {
+          if (result.success) {
+            navigator.vibrate([100, 100])
+          } else {
+            navigator.vibrate([100, 30, 100])
+          }
+        }
         
-        if (!result.success && navigator.vibrate) {
-          navigator.vibrate(400);
+        if (!result.success) {
+          scannerRef.current?.resume();
+        } else {
+          const successElement = document.getElementById('success');
+          if (successElement) {
+            successElement.style.display = 'flex';
+          }
+          document.querySelector("#success button")?.addEventListener('click', () => {
+            scannerRef.current?.resume()
+            const successElement = document.getElementById('success');
+            if (successElement) {
+              successElement.style.display = 'none';
+            }
+          }, { once: true})
         }
         
         setTimeout(() => setLastResult(null), 2000);
