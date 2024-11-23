@@ -1,6 +1,7 @@
 export interface EventPass {
   id: string;
   name: string;
+  email: string;
   counter: number;
   validQRCodes: string[];
   usedQRCodes: string[];
